@@ -1,6 +1,5 @@
 import ssl
 import socket
-import sys
 
 from contextlib import closing
 
@@ -40,7 +39,6 @@ class WSGIApplication(object):
         ssl_context = ssl.create_default_context()
         with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
             sock = ssl_context.wrap_socket(sock, server_hostname=hostname)
-            print hostname
             sock.connect((hostname, 443))
 
             return x509.load_der_x509_certificate(

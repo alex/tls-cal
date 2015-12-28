@@ -1,3 +1,4 @@
+import logging
 import ssl
 import socket
 
@@ -50,7 +51,11 @@ class WSGIApplication(object):
     def home(self, request):
         cal = self.create_calendar()
         for host in self.host_db.gethosts(request):
-            cert = self.get_certificate(host)
+            try:
+                cert = self.get_certificate(host)
+            except (socket.error, ssl.SSLError):
+                logging.exception("tlscal.get_certificate.error host=%s", host)
+                continue
             self.add_to_calendar(cal, host, cert)
 
         return Response(cal.to_ical(), content_type="text/calendar")
@@ -74,6 +79,7 @@ class WSGIApplication(object):
         ssl_context = ssl.create_default_context()
         with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
             sock = ssl_context.wrap_socket(sock, server_hostname=hostname)
+            sock.settimeout(3.0)
             sock.connect((hostname, 443))
 
             return x509.load_der_x509_certificate(

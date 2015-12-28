@@ -22,7 +22,7 @@ class StaticHostDatabase(object):
     def __init__(self, hosts):
         self.hosts = hosts
 
-    def gethosts(self):
+    def gethosts(self, request):
         return self.hosts
 
 
@@ -49,7 +49,7 @@ class WSGIApplication(object):
 
     def home(self, request):
         cal = self.create_calendar()
-        for host in self.host_db.gethosts():
+        for host in self.host_db.gethosts(request):
             cert = self.get_certificate(host)
             self.add_to_calendar(cal, host, cert)
 

@@ -33,6 +33,27 @@ class WSGIApplication(object):
             Rule(r"/", endpoint=self.home)
         ])
 
+    def __call__(self, environ, start_response):
+        request = Request(environ)
+        response = self.handle_request(request)
+        return response(environ, start_response)
+
+    def handle_request(self, request):
+        adapter = self.url_map.bind_to_environ(request)
+        try:
+            endpoint, args = adapter.match()
+            return endpoint(request, **args)
+        except HTTPException as e:
+            return e
+
+    def home(self, request):
+        cal = self.create_calendar()
+        for host in self.host_db.gethosts():
+            cert = self.get_certificate(host)
+            self.add_to_calendar(cal, host, cert)
+
+        return Response(cal.to_ical(), content_type="text/calendar")
+
     def create_calendar(self):
         cal = icalendar.Calendar()
         cal["summary"] = "When do the certs expire?"
@@ -57,27 +78,6 @@ class WSGIApplication(object):
             return x509.load_der_x509_certificate(
                 sock.getpeercert(True), backend=default_backend()
             )
-
-    def __call__(self, environ, start_response):
-        request = Request(environ)
-        response = self.handle_request(request)
-        return response(environ, start_response)
-
-    def handle_request(self, request):
-        adapter = self.url_map.bind_to_environ(request)
-        try:
-            endpoint, args = adapter.match()
-            return endpoint(request, **args)
-        except HTTPException as e:
-            return e
-
-    def home(self, request):
-        cal = self.create_calendar()
-        for host in self.host_db.gethosts():
-            cert = self.get_certificate(host)
-            self.add_to_calendar(cal, host, cert)
-
-        return Response(cal.to_ical(), content_type="text/calendar")
 
 
 @click.command()

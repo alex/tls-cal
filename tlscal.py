@@ -77,7 +77,7 @@ class WSGIApplication(object):
             sock.connect((hostname, 443))
 
             return x509.load_der_x509_certificate(
-                sock.getpeercert(True), backend=default_backend()
+                sock.getpeercert(binary_form=True), backend=default_backend()
             )
 
 

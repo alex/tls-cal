@@ -10,15 +10,28 @@ from cryptography.hazmat.backends import default_backend
 
 import icalendar
 
+from werkzeug.routing import Map, Rule
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Response, Request
 
 import yaml
 
 
+class StaticHostDatabase(object):
+    def __init__(self, hosts):
+        self.hosts = hosts
+
+    def gethosts(self):
+        return self.hosts
+
+
 class WSGIApplication(object):
-    def __init__(self, hostnames):
-        self.hostnames = hostnames
+    def __init__(self, host_db):
+        self.host_db = host_db
+
+        self.url_map = Map([
+            Rule(r"/", endpoint=self.home)
+        ])
 
     def create_calendar(self):
         cal = icalendar.Calendar()
@@ -51,8 +64,16 @@ class WSGIApplication(object):
         return response(environ, start_response)
 
     def handle_request(self, request):
+        adapter = self.url_map.bind_to_environ(request)
+        try:
+            endpoint, args = adapter.match()
+            return endpoint(request, **args)
+        except HTTPException as e:
+            return e
+
+    def home(self, request):
         cal = self.create_calendar()
-        for host in self.hostnames:
+        for host in self.host_db.gethosts():
             cert = self.get_certificate(host)
             self.add_to_calendar(cal, host, cert)
 
@@ -64,7 +85,8 @@ class WSGIApplication(object):
 def main(config):
     with open(config) as f:
         config = yaml.safe_load(f.read())
-    run_simple("localhost", 4000, WSGIApplication(config["hosts"]))
+    host_db = StaticHostDatabase(config["hosts"])
+    run_simple("localhost", 4000, WSGIApplication(host_db))
 
 
 if __name__ == "__main__":

@@ -18,3 +18,5 @@ And then:
 .. code-block:: console
 
     $ python tlscal.py path/to/config.yml
+
+Beware: this is raw, it has bugs.

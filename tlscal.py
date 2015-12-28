@@ -10,6 +10,7 @@ from cryptography.hazmat.backends import default_backend
 
 import icalendar
 
+from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Response, Request

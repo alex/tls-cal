@@ -19,6 +19,9 @@ from werkzeug.wrappers import Response, Request
 import yaml
 
 
+DEFAULT_SOCKET_TIMEOUT = 3.0
+
+
 class StaticHostDatabase(object):
     def __init__(self, hosts):
         self.hosts = hosts
@@ -79,7 +82,7 @@ class WSGIApplication(object):
         ssl_context = ssl.create_default_context()
         with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
             sock = ssl_context.wrap_socket(sock, server_hostname=hostname)
-            sock.settimeout(3.0)
+            sock.settimeout(DEFAULT_SOCKET_TIMEOUT)
             sock.connect((hostname, 443))
 
             return x509.load_der_x509_certificate(

@@ -75,15 +75,19 @@ class WSGIApplication(object):
         event["uid"] = "{}:{}".format(host, cert.serial)
         event.add("dtstart", cert.not_valid_after.date())
         event.add("description", "{} certificate expiration".format(host))
-        event.add("summary", "The certificate for {}:443 expires".format(host))
+        event.add("summary", "The certificate for {} expires".format(host))
         cal.add_component(event)
 
     def get_certificate(self, hostname):
         ssl_context = ssl.create_default_context()
         with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-            sock = ssl_context.wrap_socket(sock, server_hostname=hostname)
+            host, _, port = hostname.partition(":")
+            if not port:
+                port = 443
+
+            sock = ssl_context.wrap_socket(sock, server_hostname=host)
             sock.settimeout(DEFAULT_SOCKET_TIMEOUT)
-            sock.connect((hostname, 443))
+            sock.connect((host, int(port)))
 
             return x509.load_der_x509_certificate(
                 sock.getpeercert(binary_form=True), backend=default_backend()

@@ -1,3 +1,4 @@
 hosts:
     - google.com
     - facebook.com
+    - smtp.mydomain.com:465

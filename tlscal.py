@@ -65,7 +65,6 @@ class WSGIApplication(object):
 
     def create_calendar(self):
         cal = icalendar.Calendar()
-        cal["summary"] = "When do the certs expire?"
         cal["prodid"] = "-//Certficate Expiration//.../"
         cal["version"] = "1.0"
         return cal
